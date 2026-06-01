@@ -253,6 +253,70 @@ docker run \
 
 ### Terraform
 
+#### Cloud infrastructure stacks (AWS & GCP)
+
+LiteLLM ships first-party Terraform stacks that provision the full proxy
+deployment — networking, database, Redis, object storage, secrets, the
+gateway/backend/ui services, a load balancer, and a one-off schema-migration
+task — on either AWS (ECS Fargate) or GCP (Cloud Run):
+
+- **AWS:** [`terraform/litellm/aws`](https://github.com/BerriAI/litellm/tree/main/terraform/litellm/aws)
+- **GCP:** [`terraform/litellm/gcp`](https://github.com/BerriAI/litellm/tree/main/terraform/litellm/gcp)
+
+Each stack is a **reusable module** (it declares no `provider` block), with a
+thin `examples/default/` root that wires the provider and gives you a
+one-command deploy:
+
+```bash
+# AWS (ECS Fargate)
+cd terraform/litellm/aws/examples/default
+cp terraform.tfvars.example terraform.tfvars   # edit: region, tenant, env, azs, proxy_config, ...
+terraform init
+terraform apply
+```
+
+```bash
+# GCP (Cloud Run)
+cd terraform/litellm/gcp/examples/default
+cp terraform.tfvars.example terraform.tfvars   # edit: project, region, tenant, env, image_registry, ...
+terraform init
+terraform apply
+```
+
+Because the stack is a module with no embedded provider, you can also call it
+directly from your own config with `count`, `for_each` (many tenants from one
+config), `depends_on`, or an assume-role / impersonated-SA provider:
+
+```hcl
+module "litellm" {
+  for_each = toset(["acme", "globex"])
+  source   = "github.com/BerriAI/litellm//terraform/litellm/aws?ref=<tag>"
+
+  tenant = each.key
+  env    = "prod"
+  region = "us-west-2"
+  azs    = ["us-west-2a", "us-west-2b"]
+}
+```
+
+:::warning Upgrading an existing deployment
+
+If you first deployed by running terraform from the stack root directly (before
+the module-first layout), the new `examples/default/` entry point shifts every
+resource address under a `module.litellm.` prefix. Run `terraform state mv` to
+re-key your state **before** applying — otherwise terraform plans a full
+destroy-and-recreate of the stack. See the migration section in the
+[AWS](https://github.com/BerriAI/litellm/tree/main/terraform/litellm/aws#migrating-an-existing-deployment)
+/ [GCP](https://github.com/BerriAI/litellm/tree/main/terraform/litellm/gcp#migrating-an-existing-deployment)
+README.
+
+:::
+
+See each stack's README for the full variable surface, TLS setup, multi-tenant
+patterns, and image-pull configuration.
+
+#### User management
+
 s/o [Nicholas Cecere](https://www.linkedin.com/in/nicholas-cecere-24243549/) for his LiteLLM User Management Terraform
 
 👉 [Go here for Terraform](https://github.com/BerriAI/terraform-provider-litellm)
