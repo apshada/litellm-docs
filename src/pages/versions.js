@@ -1,29 +1,32 @@
 import React from 'react';
 import Layout from '@theme/Layout';
 import Link from '@docusaurus/Link';
-import {useVersions} from '@docusaurus/plugin-content-docs/client';
+import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import manifest from '@site/versioning/manifest.json';
 
-// version string -> PyPI publish date (YYYY-MM-DD)
-const RELEASED = Object.fromEntries(
-  (manifest.versions || []).map((v) => [
-    v.version,
-    (v.pypi_published || '').slice(0, 10),
-  ]),
-);
-
-function landingHref(version) {
-  const mainDoc = version.docs.find((d) => d.id === version.mainDocId);
-  return (mainDoc && mainDoc.path) || version.path;
-}
+// Manifest is oldest-first; show newest first.
+const ALL_VERSIONS = (manifest.versions || []).slice().reverse();
 
 export default function Versions() {
-  // Versions for the default docs plugin, newest-first (incl. "current"/main).
-  const versions = useVersions(undefined);
-  const current = versions.find((v) => v.name === 'current');
-  const released = versions.filter((v) => v.name !== 'current');
-  const totalReleases = (manifest.versions || []).length;
-  const oldestManifest = (manifest.versions || [])[0];
+  const {siteConfig} = useDocusaurusContext();
+  const {
+    docsArchiveUrl = '',
+    buildAllVersions = false,
+    builtReleasedVersions = [],
+    currentDocsPath = '/docs/',
+  } = siteConfig.customFields || {};
+
+  const builtSet = new Set(builtReleasedVersions);
+  const archive = String(docsArchiveUrl).replace(/\/$/, '');
+
+  // Same-origin link if this version is rendered in this build; otherwise the
+  // static archive (or a same-origin /docs/<v>/ rewrite when no archive URL set).
+  const urlFor = (version) =>
+    buildAllVersions || builtSet.has(version)
+      ? `/docs/${version}/`
+      : `${archive}/docs/${version}/`;
+
+  const latest = ALL_VERSIONS[0] && ALL_VERSIONS[0].version;
 
   return (
     <Layout
@@ -35,44 +38,23 @@ export default function Versions() {
           Each version below matches a published <code>litellm</code> pip
           release. Check your installed version with{' '}
           <code>litellm --version</code> (or <code>pip show litellm</code>) and
-          open the matching docs. The newest release is the default, served at{' '}
-          <Link to="/docs/">/docs</Link>.
+          open the matching docs.
         </p>
 
-        {current && (
-          <>
-            <h2>Current (in development)</h2>
-            <table>
-              <tbody>
-                <tr>
-                  <th>{current.label}</th>
-                  <td>tracks the <code>main</code> branch (unreleased)</td>
-                  <td>
-                    <Link to={landingHref(current)}>Documentation</Link>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </>
-        )}
+        <h2>Current</h2>
+        <table>
+          <tbody>
+            <tr>
+              <th>main 🚧</th>
+              <td>in development (tracks the latest commit)</td>
+              <td>
+                <Link to={currentDocsPath}>Documentation</Link>
+              </td>
+            </tr>
+          </tbody>
+        </table>
 
-        <h2>Released versions ({released.length})</h2>
-        {released.length < totalReleases && (
-          <p
-            style={{
-              padding: '0.75rem 1rem',
-              border: '1px solid var(--ifm-color-emphasis-300)',
-              borderRadius: 8,
-              background: 'var(--ifm-color-emphasis-100)',
-            }}>
-            Showing the <strong>{released.length}</strong> most recent of{' '}
-            <strong>{totalReleases}</strong> released versions. Older releases
-            (back to {oldestManifest && oldestManifest.version}, released{' '}
-            {oldestManifest && (oldestManifest.pypi_published || '').slice(0, 10)})
-            are archived in the repository and can be published by maintainers by
-            raising <code>DOCS_VERSIONS_BUILD_LIMIT</code>.
-          </p>
-        )}
+        <h2>Released versions ({ALL_VERSIONS.length})</h2>
         <table>
           <thead>
             <tr>
@@ -82,21 +64,24 @@ export default function Versions() {
             </tr>
           </thead>
           <tbody>
-            {released.map((version) => (
-              <tr key={version.name}>
+            {ALL_VERSIONS.map((v) => (
+              <tr key={v.version}>
                 <th>
-                  {version.label}
-                  {version.isLast && (
-                    <span
-                      className="badge badge--primary"
-                      style={{marginLeft: 8}}>
+                  {v.version}
+                  {v.version === latest && (
+                    <span className="badge badge--primary" style={{marginLeft: 8}}>
                       latest
                     </span>
                   )}
                 </th>
-                <td>{RELEASED[version.name] || '—'}</td>
+                <td>{(v.pypi_published || '').slice(0, 10)}</td>
                 <td>
-                  <Link to={landingHref(version)}>Documentation</Link>
+                  {/* external/archive links use a plain anchor to avoid SPA routing */}
+                  {urlFor(v.version).startsWith('http') ? (
+                    <a href={urlFor(v.version)}>Documentation</a>
+                  ) : (
+                    <Link to={urlFor(v.version)}>Documentation</Link>
+                  )}
                 </td>
               </tr>
             ))}
@@ -106,7 +91,8 @@ export default function Versions() {
         <p style={{marginTop: '2rem'}}>
           <small>
             Historical versions are reconstructed from the documentation as it
-            existed when each release was published; see{' '}
+            existed when each release was published, and are served from a static
+            archive built by CI. See{' '}
             <a href="https://github.com/BerriAI/litellm-docs/blob/main/versioning/README.md">
               versioning/README.md
             </a>{' '}

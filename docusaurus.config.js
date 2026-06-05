@@ -19,25 +19,55 @@ try {
 }
 const hasDocsVersions = Array.isArray(docsVersions) && docsVersions.length > 0;
 
-// Building every backfilled version at once is resource-heavy (70+ full doc
-// snapshots need >8GB Node heap and tens of minutes — more than a default Vercel
-// builder). By default we BUILD only the most recent N released versions (plus
-// the unversioned "main"); the rest remain committed in versioned_docs/ and can
-// be served by raising the limit on a larger builder:
-//   DOCS_VERSIONS_BUILD_LIMIT=all   -> build every version
-//   DOCS_VERSIONS_BUILD_LIMIT=40    -> build the latest 40 released versions
-const DEFAULT_VERSIONS_BUILD_LIMIT = 20;
-const versionsBuildLimitRaw =
-  process.env.DOCS_VERSIONS_BUILD_LIMIT || String(DEFAULT_VERSIONS_BUILD_LIMIT);
-const buildAllVersions =
-  versionsBuildLimitRaw === 'all' || versionsBuildLimitRaw === '0';
-const versionsBuildLimit = buildAllVersions
-  ? docsVersions.length
-  : Math.max(1, parseInt(versionsBuildLimitRaw, 10) || DEFAULT_VERSIONS_BUILD_LIMIT);
-// versions.json is newest-first, so the first N are the most recent releases.
-const includedReleasedVersions = hasDocsVersions
-  ? docsVersions.slice(0, versionsBuildLimit)
-  : [];
+// Docusaurus re-renders EVERY versioned snapshot on every build, but historical
+// snapshots are frozen and never change. To keep Vercel PR/production builds fast
+// (they gate merges), the DEFAULT build includes ONLY the current docs. The 73
+// frozen versions are built separately, without a 45-min cap, by CI
+// (.github/workflows/build-docs-archive.yml) and served from a static archive.
+// Override per environment via DOCS_VERSIONS_BUILD_LIMIT:
+//   current  (default) -> current docs only (fast; for Vercel)
+//   all                -> every version (CI archive build)
+//   20                 -> current + the latest 20 released versions
+const versionsBuildLimitRaw = (
+  process.env.DOCS_VERSIONS_BUILD_LIMIT || 'current'
+).toLowerCase();
+const buildAllVersions = versionsBuildLimitRaw === 'all';
+const currentOnly = ['current', 'none', '0', ''].includes(versionsBuildLimitRaw);
+let includedReleasedVersions = [];
+if (hasDocsVersions && !currentOnly) {
+  const n = buildAllVersions
+    ? docsVersions.length
+    : Math.max(1, parseInt(versionsBuildLimitRaw, 10) || 0);
+  includedReleasedVersions = docsVersions.slice(0, n);
+}
+// Whether THIS build actually renders released version snapshots.
+const buildsVersions =
+  hasDocsVersions && (buildAllVersions || includedReleasedVersions.length > 0);
+
+// Base URL of the CI-built version archive (e.g.
+// https://berriai.github.io/litellm-docs, a custom domain, or "" to use a
+// same-origin Vercel rewrite). The navbar dropdown and /versions page link
+// frozen versions here.
+const docsArchiveUrl = (process.env.DOCS_ARCHIVE_URL || '').replace(/\/$/, '');
+
+// All known versions (newest first) from the manifest, for building version
+// links even when this build only renders current docs.
+let docsManifest = {versions: []};
+try {
+  docsManifest = JSON.parse(fs.readFileSync(__dirname + '/versioning/manifest.json', 'utf8'));
+} catch (e) {
+  docsManifest = {versions: []};
+}
+// In the current-only (Vercel) build, "main"/current lives at /docs/; in a
+// multi-version build it lives at /docs/main/ and the latest release is at /docs/.
+const currentDocsPath = buildsVersions ? '/docs/main/' : '/docs/';
+// URL for a released version: same-origin if built here, else the archive.
+const releasedVersionUrl = (version) => {
+  const builtHere =
+    buildAllVersions || includedReleasedVersions.includes(version);
+  if (builtHere) return `/docs/${version}/`;
+  return `${docsArchiveUrl}/docs/${version}/`;
+};
 
 // @ts-ignore
 const lightCodeTheme = require('prism-react-renderer/themes/vsLight');
@@ -105,14 +135,28 @@ const config = {
   tagline: 'Simplify LLM API Calls',
   favicon: '/img/favicon.ico', 
 
-  // Set the production url of your site here
-  url: 'https://docs.litellm.ai/',
-  // Set the /<baseUrl>/ pathname under which your site is served
-  // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: '/',
+  // Set the production url of your site here. Overridable so the CI archive can
+  // build for a different host (e.g. GitHub Pages) without code changes.
+  url: process.env.DOCS_SITE_URL || 'https://docs.litellm.ai/',
+  // Set the /<baseUrl>/ pathname under which your site is served.
+  // For GitHub Pages project sites this is often '/<repo>/'.
+  baseUrl: process.env.DOCS_BASE_URL || '/',
+
+  // The version archive is a supplementary mirror of the canonical site; keep it
+  // out of search engines so it doesn't compete with docs.litellm.ai.
+  noIndex: Boolean(process.env.DOCS_ARCHIVE_BUILD),
 
   onBrokenLinks: 'warn',
   onBrokenMarkdownLinks: 'warn',
+
+  // Exposed to client pages (e.g. /versions) to build version links that point
+  // at the static archive for versions not rendered in the current build.
+  customFields: {
+    docsArchiveUrl,
+    buildAllVersions,
+    builtReleasedVersions: includedReleasedVersions,
+    currentDocsPath,
+  },
 
   // Even if you don't use internalization, you can use this field to set useful
   // metadata like html lang. For example, if your site is Chinese, you may want
@@ -127,7 +171,7 @@ const config = {
     // latest equivalent page on every non-latest docs version (old pip versions
     // and the in-development "main"). Prevents duplicate-content SEO dilution
     // across ~73 versions and keeps crawlers / Inkeep scoped to the latest docs.
-    ...(hasDocsVersions
+    ...(buildsVersions
       ? [[require('./plugins/versioned-seo'), {}]]
       : []),
     ...(hasInkeepSearch
@@ -305,26 +349,24 @@ const config = {
           // /docs/ (the default) and expose the unversioned working tree as the
           // in-development "main" at /docs/main/ with an "unreleased" banner.
           // Older versions automatically get the "unmaintained" banner.
-          ...(hasDocsVersions
+          ...(buildsVersions
             ? {
+                // Multi-version build (CI archive): newest release served at
+                // /docs/, current working tree as "main" at /docs/main/.
                 lastVersion: docsVersions[0],
                 versions: {
-                  current: {
-                    label: 'main 🚧',
-                    path: 'main',
-                    banner: 'unreleased',
-                  },
+                  current: {label: 'main 🚧', path: 'main', banner: 'unreleased'},
                 },
-                // Limit which versions are built (see DOCS_VERSIONS_BUILD_LIMIT
-                // above). Omitted when building all so every version is included.
                 ...(buildAllVersions
                   ? {}
-                  : {
-                      onlyIncludeVersions: [
-                        'current',
-                        ...includedReleasedVersions,
-                      ],
-                    }),
+                  : {onlyIncludeVersions: ['current', ...includedReleasedVersions]}),
+              }
+            : hasDocsVersions
+            ? {
+                // Current-only (fast, default/Vercel) build: render just the
+                // working-tree docs at /docs/, ignoring the frozen snapshots.
+                lastVersion: 'current',
+                onlyIncludeVersions: ['current'],
               }
             : {}),
         },
@@ -398,15 +440,27 @@ const config = {
           },
           { to: '/release_notes', label: 'Changelog', position: 'left' },
           { to: '/blog', label: 'Blog', position: 'left' },
+          // Custom version dropdown built from the manifest (not Docusaurus'
+          // docsVersionDropdown), so it lists every release even in the fast
+          // current-only build, linking frozen versions to the static archive.
+          // `href` is used (not `to`) so links to versions not rendered in THIS
+          // build aren't flagged as broken.
           ...(hasDocsVersions
             ? [
                 {
-                  type: 'docsVersionDropdown',
+                  type: 'dropdown',
+                  label: 'Versions',
                   position: 'right',
-                  dropdownItemsAfter: [
-                    { to: '/versions', label: 'All versions →' },
+                  items: [
+                    {label: 'main 🚧 (unreleased)', href: currentDocsPath},
+                    ...docsVersions
+                      .slice(0, 6)
+                      .map((v, i) => ({
+                        label: i === 0 ? `${v} (latest)` : v,
+                        href: releasedVersionUrl(v),
+                      })),
+                    {to: '/versions', label: 'All versions →'},
                   ],
-                  dropdownActiveClassDisabled: true,
                 },
               ]
             : []),
