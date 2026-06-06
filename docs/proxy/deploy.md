@@ -299,8 +299,41 @@ module "litellm" {
 }
 ```
 
-See each stack's README for the full variable surface, TLS setup, multi-tenant
-patterns, and image-pull configuration.
+The GCP stack also ships a Cloud Shell one-click installer via
+DeployStack; the "Open in Cloud Shell" button in
+[`terraform/litellm/gcp/README.md`](https://github.com/BerriAI/litellm/tree/main/terraform/litellm/gcp)
+opens a guided tutorial that runs `terraform apply` against your selected
+project.
+
+Both stacks expose the same conceptual surface; concrete inputs differ only
+where the cloud forces it.
+
+| Capability                       | AWS input(s)                                            | GCP input(s)                                              |
+| -------------------------------- | ------------------------------------------------------- | --------------------------------------------------------- |
+| Per-deployment tags / labels     | `tags` (`map(string)`)                                  | `labels` (`map(string)`)                                  |
+| TLS posture                      | `acm_certificate_arn`, `allow_plaintext_alb`            | `lb_domains`, `allow_plaintext_lb`                        |
+| Force destroy of object store    | `s3_force_destroy`                                      | `gcs_force_destroy`                                       |
+| Database deletion protection     | `skip_final_snapshot`                                   | `cloudsql_deletion_protection`                            |
+| Typed `proxy_config` YAML map    | `proxy_config`                                          | `proxy_config`                                            |
+| Extra plain env per component    | `gateway_extra_env`, `backend_extra_env`                | `gateway_extra_env`, `backend_extra_env`                  |
+| Extra secret-backed env          | `gateway_extra_secrets`, `backend_extra_secrets` (ARNs) | `gateway_extra_secrets`, `backend_extra_secrets` (resource IDs) |
+| Uvicorn `--workers` on gateway   | `gateway_num_workers`                                   | `gateway_num_workers`                                     |
+| OpenTelemetry v2 (opt-in)        | `otel_endpoint`, `otel_exporter`, `otel_environment_name`, `otel_capture_message_content`, `otel_headers_secret_arn` | `otel_endpoint`, `otel_exporter`, `otel_environment_name`, `otel_capture_message_content`, `otel_headers_secret` |
+
+OTel v2 is opt-in: leave `otel_endpoint` empty and nothing OTel-related is
+added to the container env; set it and both gateway and backend get
+`LITELLM_OTEL_V2=true` plus the full `OTEL_*` block, with
+`OTEL_SERVICE_NAME` stamped per component
+(`<tenant>-litellm-<env>-gateway` / `-backend`). Any `OTEL_*` key set in
+`gateway_extra_env` / `backend_extra_env` wins for that service.
+
+Both stacks stamp their own `litellm:stack` (AWS) / `litellm-stack` (GCP)
+plus `managed-by = "terraform"` tag/label onto every taggable resource and
+merge `var.tags` / `var.labels` on top. AWS provider `default_tags` merge
+on top of those.
+
+See each stack's README for the full variable surface, TLS setup,
+multi-tenant patterns, and image-pull configuration.
 
 #### User management
 
