@@ -59,7 +59,7 @@ When `EXPERIMENTAL_UI_LOGIN` is enabled, the **browser UI login** session uses a
 :::tip
 You can check your current token's age and expiration status using:
 ```bash
-litellm-proxy whoami
+lite whoami
 ```
 :::
 
@@ -113,13 +113,13 @@ Example poll response (after SSO completes):
 
    ```shell
    ...
-   Installed 2 executables: litellm, litellm-proxy
+   Installed 2 executables: litellm, lite
    ```
 
-   and now you can use the tool by just typing `litellm-proxy` in your terminal:
+   and now you can use the tool by just typing `lite` in your terminal:
 
    ```shell
-   litellm-proxy
+   lite
    ```
 
 2. **Set up environment variables**
@@ -135,7 +135,7 @@ Example poll response (after SSO completes):
 3. **Login**
 
    ```shell
-   litellm-proxy login
+   lite login
    ```
 
    This will open a browser window to authenticate. If you have connected LiteLLM Proxy to your SSO provider, you should be able to login with your SSO credentials. Once logged in, you can use the CLI to make requests to the LiteLLM Gateway.
@@ -143,7 +143,7 @@ Example poll response (after SSO completes):
 4. **Make a test request to view models**
 
    ```shell
-   litellm-proxy models list
+   lite models list
    ```
 
    This will list all the models available to you.
