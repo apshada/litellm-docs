@@ -17,19 +17,25 @@ and more, as well as making chat and HTTP requests to the proxy server.
 
 1. **Install the CLI**
 
-   The one-line installer needs only `curl`. It bootstraps everything else: it installs [uv](https://github.com/astral-sh/uv) when it's missing, then uses uv to provision a Python runtime if you don't already have one:
+   The `lite` client is a thin laptop install: it points at a LiteLLM proxy and runs your coding agents through it, with none of the proxy server runtime pulled in. The one-line installer needs only `curl`; it bootstraps [uv](https://github.com/astral-sh/uv) when it's missing and lets uv provision a compatible Python for you:
 
    ```shell
-   curl -fsSL https://raw.githubusercontent.com/BerriAI/litellm/main/scripts/install.sh | sh
+   curl -fsSL https://raw.githubusercontent.com/BerriAI/litellm/main/scripts/install-cli.sh | sh
    ```
 
-   Already have uv and prefer to drive it yourself? Install the package directly instead:
+   On macOS you can install it with Homebrew instead:
 
    ```shell
-   uv tool install 'litellm[proxy]'
+   brew install BerriAI/litellm/lite
    ```
 
-   Either way you get the full `litellm[proxy]` package: the proxy server plus the `lite` management CLI. The `lite` command is now available, so start by typing it in your terminal:
+   Already have uv and prefer to drive it yourself? Install the package directly:
+
+   ```shell
+   uv tool install 'litellm[cli]'
+   ```
+
+   Any of these gives you the `lite` command; if you already run a proxy server from `litellm[proxy]`, it ships there too. Start by typing it in your terminal:
 
    ```shell
    lite
