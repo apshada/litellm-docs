@@ -103,19 +103,19 @@ Example poll response (after SSO completes):
 
 1. **Install the CLI**
 
-   The one-line installer needs only `curl`; it installs a Python runtime for you if you don't already have one:
+   The one-line installer needs only `curl`. It bootstraps everything else: it installs [uv](https://github.com/astral-sh/uv) when it's missing, then uses uv to provision a Python runtime if you don't already have one:
 
    ```shell
    curl -fsSL https://raw.githubusercontent.com/BerriAI/litellm/main/scripts/install.sh | sh
    ```
 
-   Or, if you already have [uv](https://github.com/astral-sh/uv):
+   Already have uv and prefer to drive it yourself? Install the package directly instead:
 
    ```shell
    uv tool install 'litellm[proxy]'
    ```
 
-   Either way the `lite` command is now available, so you can use the tool by just typing `lite` in your terminal:
+   Either way you get the full `litellm[proxy]` package: the proxy server plus the `lite` management CLI. The `lite` command is now available, so start by typing it in your terminal:
 
    ```shell
    lite
