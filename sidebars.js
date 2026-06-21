@@ -280,6 +280,11 @@ const sidebars = {
               label: "speech()",
             },
             {
+              type: "doc",
+              id: "sandbox",
+              label: "acode_interpreter_tool()",
+            },
+            {
               type: "link",
               label: "All Supported Endpoints →",
               href: "https://docs.litellm.ai/docs/supported_endpoints",
@@ -1291,6 +1296,11 @@ const learnSidebar = {
             "completion/web_fetch",
             "completion/computer_use",
             "guides/code_interpreter",
+            {
+              type: "doc",
+              id: "sandbox",
+              label: "Code Interpreter Sandbox Interception",
+            },
             "completion/anthropic_advisor_tool",
             "completion/message_sanitization",
           ],
