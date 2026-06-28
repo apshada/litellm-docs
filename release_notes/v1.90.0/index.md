@@ -20,6 +20,7 @@ hide_table_of_contents: false
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import Image from '@theme/IdealImage';
 
 ## Deploy this version
 
@@ -50,6 +51,16 @@ pip install litellm==1.90.0
 - **OpenTelemetry v2 reaches metrics parity with v1**, emitting the six `gen_ai.client.*` metrics, stamping input/output message content, and scoping OTLP credentials per tenant.
 - **A broad streaming-reliability sweep**: upstream connections are now released when the client disconnects mid-stream (Gemini, aiohttp), requests are cancelled cleanly, and partial spend is recorded on interrupted streams.
 - **Two new guardrails** (Cisco AI Defense, Repello Argus) and a large Next.js App Router UI migration covering the models, teams, users, organizations, api-keys, and usage pages.
+
+## App Router Routing
+
+<Image img={require('../../img/release_notes/app_router_routing.png')} style={{ width: '800px', height: 'auto' }} />
+
+We're moving the Admin UI from query param based routing to the Nextjs App Router. The motivation is that routing now lives in the URL, so any view (a specific team, a filtered usage report, a single key) becomes a shareable link you can send to a teammate or bookmark instead of a piece of in-memory client state. 
+
+The motivation for this is twofold: it lays the groundwork for a lot of highly requested feaetures/improvements to the UI, and it lays the groundwork for contributing to LiteLLM easier and code more human reviewable for maintainers.
+
+The biggest one here will be sharing links for different pages like specific logs pages, teams pages, and more.
 
 ## New Providers and Endpoints
 
