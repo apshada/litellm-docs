@@ -65,7 +65,7 @@ The fastest way to benchmark proxy overhead is using `network_mock` mode. This i
 model_list:
   - model_name: db-openai-endpoint
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: "sk-fake-key"
       api_base: "https://api.openai.com"
 
@@ -250,7 +250,7 @@ class MyUser(HttpUser):
 
 **Pros**
 
-* Fully utilizes available CPU capacity
+* Fully uses available CPU capacity
 * Strong connection handling and low latency after initial warm-up spikes
 
 **Cons**

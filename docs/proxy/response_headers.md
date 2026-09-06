@@ -71,7 +71,7 @@ The component headers sum to the total: input + cache read + cache creation + ou
 model_list:
   - model_name: my-chat-model          # clients call this
     litellm_params:
-      model: gpt-4o-mini               # LiteLLM calls this upstream
+      model: {{openai_small}}               # LiteLLM calls this upstream
     model_info:
       id: "7c9f2a1b3d8e4f0a2c6b5d9e1f3a7b8c"   # optional; auto-generated if omitted
 ```
@@ -81,6 +81,10 @@ model_list:
 | `x-litellm-model-group` | `my-chat-model` | `model_name` / request `model`; not `litellm_params.model`. |
 | `x-litellm-model-id` | `7c9f2a1b3d8e4f0a2c6b5d9e1f3a7b8c` | Which deployment row; use with `/v1/model/info?litellm_model_id=...`. |
 | Response body `model` | often `my-chat-model` | Often restamped to match the client; upstream id stays in config. |
+
+### Auto-routed requests
+
+For a request to an [auto router](./auto_routing.md), the body `model` is the router alias the client called and the headers above still name the deployment that answered. Clients that cannot read response headers, including streaming consumers, can set `return_raw_model_name` on the router to get the picked tier in the body `model` field instead; see [reading the picked model from the response](./auto_routing.md#reading-the-picked-model-from-the-response).
 
 ### More examples (illustrative)
 

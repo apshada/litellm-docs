@@ -51,6 +51,7 @@ const sidebars = {
             "observability/phoenix_integration",
             "observability/athina_integration",
             "observability/braintrust",
+            "observability/grafana_cloud",
             "observability/opik_integration",
             "observability/deepeval_integration",
             "observability/helicone_integration",
@@ -75,7 +76,6 @@ const sidebars = {
             "observability/azure_sentinel",
             "observability/datadog",
             "observability/gcs_bucket_integration",
-            "observability/grafana_cloud",
             "observability/newrelic",
             "observability/posthog_integration",
             "observability/sentry",
@@ -179,6 +179,7 @@ const sidebars = {
           "proxy/guardrails/vigil_guard",
           "proxy/guardrails/xecguard",
           "proxy/guardrails/straiker",
+          "proxy/guardrails/alice",
         ].sort(),
       ],
     },
@@ -472,9 +473,11 @@ const sidebars = {
                 },
                 "mcp_rest_api",
                 "mcp_openapi",
+                "mcp_authentication",
                 "mcp_oauth",
                 "mcp_oauth_passthrough",
                 "mcp_obo_auth",
+                "mcp_id_jag",
                 "mcp_aws_sigv4",
                 "mcp_zero_trust",
                 "mcp_public_internet",
@@ -511,7 +514,7 @@ const sidebars = {
         {
           type: "category",
           label: "Troubleshooting",
-          items: ["proxy/debugging", "proxy/error_diagnosis"],
+          items: ["proxy/debugging", "proxy/error_reference", "proxy/error_diagnosis"],
         },
         {
           type: "category",
@@ -537,7 +540,6 @@ const sidebars = {
               items: [
                 "proxy/ai_hub",
                 "proxy/model_compare_ui",
-                "proxy/ui/routing_groups",
               ]
             },
             {
@@ -624,6 +626,7 @@ const sidebars = {
             "proxy/project_management",
             "proxy/ui_team_soft_budget_alerts",
             "proxy/tag_budgets",
+            "proxy/model_access_group_budgets",
             "proxy/customers",
             "proxy/dynamic_rate_limit",
             "proxy/io_token_rate_limits",
@@ -645,6 +648,7 @@ const sidebars = {
             "proxy/guardrails/test_playground",
             "proxy/guardrails/litellm_content_filter",
             "proxy/guardrails/realtime_guardrails",
+            "proxy/guardrails/batch_guardrails",
             {
               type: "link",
               label: "Providers →",
@@ -753,6 +757,7 @@ const sidebars = {
             "proxy/pricing_calculator",
             "proxy/provider_margins",
             "proxy/provider_discounts",
+            "proxy/off_peak_pricing",
             "proxy/sync_models_github",
             "proxy/billing",
             "proxy/spend_logs_deletion",
@@ -883,9 +888,11 @@ const sidebars = {
             },
             "mcp_rest_api",
             "mcp_openapi",
+            "mcp_authentication",
             "mcp_oauth",
             "mcp_oauth_passthrough",
             "mcp_obo_auth",
+            "mcp_id_jag",
             "mcp_aws_sigv4",
             "mcp_zero_trust",
             "mcp_public_internet",
@@ -907,6 +914,7 @@ const sidebars = {
             "anthropic_unified/index",
             "anthropic_unified/structured_output",
             "anthropic_unified/messages_to_responses_mapping",
+            "anthropic_unified/native_passthrough",
           ]
         },
         "count_tokens",
@@ -925,6 +933,7 @@ const sidebars = {
             "pass_through/cohere",
             "pass_through/comprehend_medical",
             "pass_through/cursor",
+            "pass_through/gigachat",
             "pass_through/google_ai_studio",
             "pass_through/langfuse",
             "pass_through/mistral",
@@ -970,6 +979,8 @@ const sidebars = {
             "search/you_com",
             "search/apiserpent",
             "search/agentcore",
+            "search/nimble",
+            "search/bing_grounding",
           ]
         },
         "skills",
@@ -1051,6 +1062,7 @@ const sidebars = {
             "providers/vertex_embedding",
             "providers/vertex_image",
             "providers/vertex_speech",
+            "providers/vertex_transcription",
             "providers/vertex_batch",
             "providers/vertex_ocr",
             "providers/vertex_ai_agent_engine",
@@ -1107,8 +1119,10 @@ const sidebars = {
         "providers/cerebras",
         "providers/chutes",
         "providers/clarifai",
+        "providers/clf_ai_gateway",
         "providers/cloudflare_workers",
         "providers/codestral",
+        "providers/cognition",
         "providers/cohere",
         "providers/cometapi",
         "providers/compactifai",
@@ -1194,6 +1208,7 @@ const sidebars = {
         "providers/publicai",
         "providers/predibase",
         "providers/pydantic_ai_agent",
+        "providers/qwencloud",
         "providers/ragflow",
         "providers/ragflow_vector_store",
         "providers/recraft",
@@ -1206,9 +1221,11 @@ const sidebars = {
             "providers/runwayml/videos",
           ]
         },
+        "providers/s3_vectors",
         "providers/sambanova",
         "providers/sap",
         "providers/scaleway",
+        "providers/scx_ai",
         "providers/stability",
         "providers/synthetic",
         "providers/snowflake",
@@ -1220,14 +1237,7 @@ const sidebars = {
         "providers/v0",
         "providers/valkey_vector_stores",
         "providers/vercel_ai_gateway",
-        {
-          type: "category",
-          label: "vLLM",
-          items: [
-            "providers/vllm",
-            "providers/vllm_batches",
-          ]
-        },
+        "providers/vllm",
         "providers/volcano",
         "providers/voyage",
         "providers/wandb_inference",
@@ -1311,6 +1321,8 @@ const sidebars = {
         "proxy/security_encryption_faq",
         "proxy/docker_image_security",
         "migration_policy",
+        "api_stability_policy",
+        "shared_responsibility",
         "proxy/release_cycle",
         "load_test_advanced",
         "load_test_sdk",
@@ -1369,6 +1381,7 @@ const sidebars = {
       items: [
         "troubleshoot/ui_issues",
         "troubleshoot/cost_discrepancy",
+        "troubleshoot/missing_model",
         "mcp_troubleshoot",
         {
           type: "category",
@@ -1701,4 +1714,27 @@ const learnSidebar = {
   ],
 };
 
-module.exports = { ...sidebars, ...learnSidebar };
+const autoRouterSidebar = {
+  autoRouterSidebar: [
+    { type: "doc", id: "auto_router/index", label: "Overview", className: "autorouter-nav-item" },
+    { type: "doc", id: "auto_router/setup", className: "autorouter-nav-item" },
+    { type: "doc", id: "auto_router/recommended_configurations", className: "autorouter-nav-item" },
+    { type: "doc", id: "auto_router/benchmarks", className: "autorouter-nav-item" },
+    { type: "doc", id: "auto_router/prompt_caching", className: "autorouter-nav-item" },
+    { type: "doc", id: "auto_router/evaluate", className: "autorouter-nav-item" },
+    { type: "doc", id: "auto_router/feature_history", className: "autorouter-nav-item" },
+    {
+      type: "category",
+      label: "Reference",
+      collapsed: false,
+      items: [
+        { type: "link", label: "Configuration Reference", href: "/docs/proxy/auto_routing" },
+        { type: "link", label: "Claude Code and Claude Desktop", href: "/docs/tutorials/claude_code_autorouter" },
+        { type: "link", label: "Autorouter CLI", href: "/docs/learn/autorouter_cli" },
+        { type: "link", label: "Prompt Cache Routing (Load Balancing)", href: "/docs/tutorials/claude_code_prompt_cache_routing" },
+      ],
+    },
+  ],
+};
+
+module.exports = { ...sidebars, ...learnSidebar, ...autoRouterSidebar };

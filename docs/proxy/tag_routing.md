@@ -9,20 +9,20 @@ import TabItem from '@theme/TabItem';
 
 ```yaml showLineNumbers title="config.yaml"
 model_list:
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
       model: openai/fake
       api_key: fake-key
       api_base: https://exampleopenaiendpoint-production.up.railway.app/
       tags: ["free"] # 👈 Key Change
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
       tags: ["paid"] # 👈 Key Change
-  - model_name: gpt-4
+  - model_name: {{openai_large}}
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/{{openai_large}}
       api_key: os.environ/OPENAI_API_KEY
       api_base: https://exampleopenaiendpoint-production.up.railway.app/
       tags: ["default"] # OPTIONAL - All untagged requests will get routed to this
@@ -41,7 +41,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "messages": [
       {"role": "user", "content": "Hello, Claude gm!"}
     ],
@@ -64,7 +64,7 @@ curl -i http://localhost:4000/v1/chat/completions \
       }
     }
   ],
-  "model": "gpt-3.5-turbo-0125",
+  "model": "{{openai_large}}",
   "object": "chat.completion",
   "usage": {"completion_tokens": 12, "prompt_tokens": 9, "total_tokens": 21}
 }
@@ -77,7 +77,7 @@ curl -i http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "messages": [
       {"role": "user", "content": "Hello, Claude gm!"}
     ],
@@ -100,7 +100,7 @@ curl -i http://localhost:4000/v1/chat/completions \
       }
     }
   ],
-  "model": "gpt-4o-2024-05-13",
+  "model": "{{openai_large}}",
   "object": "chat.completion",
   "usage": {"completion_tokens": 10, "prompt_tokens": 12, "total_tokens": 22}
 }
@@ -114,7 +114,7 @@ curl -L -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 -H 'Authorization: Bearer sk-1234' \
 -H 'x-litellm-tags: free,my-custom-tag' \
 -d '{
-  "model": "gpt-4",
+  "model": "{{openai_large}}",
   "messages": [
     {
       "role": "user",
@@ -171,7 +171,7 @@ curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-1234" \
   -d '{
-    "model": "gpt-4",
+    "model": "{{openai_large}}",
     "messages": [{"role": "user", "content": "Hello"}],
     "metadata": {"tags": ["!provider:anthropic"]}
   }'
@@ -185,19 +185,19 @@ Any deployment tagged `provider:anthropic` is removed from the candidate pool be
 model_list:
   - model_name: chat
     litellm_params:
-      model: anthropic/claude-haiku-4-5-20251001
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
       tags: ["provider:anthropic"]
 
   - model_name: chat
     litellm_params:
-      model: openai/gpt-4o-mini
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
       tags: ["provider:openai"]
 
   - model_name: chat
     litellm_params:
-      model: vertex_ai/gemini-2.0-flash
+      model: vertex_ai/{{gemini_flash}}
       api_key: os.environ/VERTEX_API_KEY
       tags: ["provider:vertex"]
 
@@ -248,13 +248,13 @@ When the primary model group is banned, the router falls through to the configur
 model_list:
   - model_name: primary
     litellm_params:
-      model: anthropic/claude-haiku-4-5-20251001
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
       tags: ["provider:anthropic"]
 
   - model_name: fallback
     litellm_params:
-      model: openai/gpt-4o-mini
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
       tags: ["provider:openai"]
 
@@ -315,13 +315,13 @@ Only a deployment carrying both `reasoning_type:high` and `provider:anthropic` i
 model_list:
   - model_name: chat
     litellm_params:
-      model: anthropic/claude-haiku-4-5-20251001
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
       tags: ["reasoning_type:high", "provider:anthropic"]
 
   - model_name: chat
     litellm_params:
-      model: openai/gpt-4o-mini
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
       tags: ["reasoning_type:high", "provider:openai"]
 
@@ -370,7 +370,7 @@ This is an explicit opt-in. Without it, behavior is unchanged: an unsatisfiable 
 model_list:
   - model_name: chat
     litellm_params:
-      model: anthropic/claude-haiku-4-5-20251001
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
       tags: ["provider:anthropic"]
     model_info:
@@ -378,7 +378,7 @@ model_list:
 
   - model_name: chat
     litellm_params:
-      model: openai/gpt-4o-mini
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
       tags: ["provider:openai", "default"]
     model_info:
@@ -426,9 +426,9 @@ curl http://localhost:4000/v1/chat/completions \
 :::caution
 Falling back to the default-tagged pool can still return a deployment the request explicitly tried to exclude, for any constraint attributable to the caller. Only set `allow_fail_open` on a model group where a `!`/`&` constraint that can't be honored is acceptable to degrade rather than fail; do not set it on a group where the constraint is a hard compliance requirement (for example, "never route this account's traffic to Provider X").
 
-A constraint inherited from key- or team-level policy is protected from being discarded. The proxy tracks which tags came from key/team metadata separately from what the request itself supplied (`metadata.inherited_tags`), so `allow_fail_open` only ever drops a constraint the caller controlled — even if the caller also resubmits the inherited tag's exact value alongside a conflicting one, a value-collision that plain set subtraction could not tell apart from an honest caller-only tag. If dropping the caller-controlled portion alone still leaves nothing to route to, the request raises instead of falling open.
+A constraint inherited from key- or team-level policy is protected from being discarded. The proxy tracks which tags came from key/team metadata separately from what the request itself supplied (`metadata.inherited_tags`), so `allow_fail_open` only ever drops a constraint the caller controlled. That holds even if the caller also resubmits the inherited tag's exact value alongside a conflicting one, a value-collision that plain set subtraction could not tell apart from an honest caller-only tag. If dropping the caller-controlled portion alone still leaves nothing to route to, the request raises instead of falling open.
 
-This protection requires the proxy layer. A direct SDK `Router` call that bypasses the proxy (no `metadata.inherited_tags` set) falls back to the fully-unconstrained default pool unconditionally, exactly as if every tag were caller-supplied — the same behavior `allow_fail_open` has always had outside the proxy.
+This protection requires the proxy layer. A direct SDK `Router` call that bypasses the proxy (no `metadata.inherited_tags` set) falls back to the fully-unconstrained default pool unconditionally, exactly as if every tag were caller-supplied. That is the same behavior `allow_fail_open` has always had outside the proxy.
 :::
 
 ### allow_fail_open semantics
@@ -470,7 +470,7 @@ curl http://localhost:4000/v1/chat/completions \
 model_list:
   - model_name: chat
     litellm_params:
-      model: anthropic/claude-haiku-4-5-20251001
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
       tags: ["default", "provider:anthropic"]
     model_info:
@@ -478,7 +478,7 @@ model_list:
 
   - model_name: chat
     litellm_params:
-      model: openai/gpt-4o-mini
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
       tags: ["provider:openai"]
 
@@ -547,7 +547,7 @@ curl http://localhost:4000/v1/chat/completions \
 model_list:
   - model_name: chat-compliance
     litellm_params:
-      model: anthropic/claude-haiku-4-5-20251001
+      model: anthropic/{{anthropic}}
       api_key: os.environ/ANTHROPIC_API_KEY
       tags: ["provider:anthropic"]
     model_info:
@@ -555,7 +555,7 @@ model_list:
 
   - model_name: chat-compliance
     litellm_params:
-      model: openai/gpt-4o-mini
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
       tags: ["provider:openai"]
     model_info:
@@ -563,7 +563,7 @@ model_list:
 
   - model_name: incident-response
     litellm_params:
-      model: openai/gpt-4o-mini
+      model: openai/{{openai_small}}
       api_key: os.environ/OPENAI_API_KEY
     model_info:
       enable_tag_filtering: false # opt out for this group only
@@ -590,7 +590,7 @@ With this config, `chat-compliance` evaluates tags on every request even though 
 
 ## Regex-based tag routing (`tag_regex`)
 
-Use `tag_regex` on a deployment to match incoming requests by their headers (e.g. `User-Agent`) — without requiring the client to send explicit tags. Patterns are operator-configured and compiled server-side, not supplied by callers.
+Use `tag_regex` on a deployment to match incoming requests by their headers (e.g. `User-Agent`) without requiring the client to send explicit tags. Patterns are operator-configured and compiled server-side, not supplied by callers.
 
 :::caution
 User-Agent is a client-supplied header and can be set to any value by any caller. Use `tag_regex` for traffic classification, not access-control enforcement.

@@ -130,9 +130,9 @@ environmentSecrets:
 
 proxy_config:
   model_list:
-    - model_name: gpt-4o
+    - model_name: {{openai_large}}
       litellm_params:
-        model: openai/gpt-4o
+        model: openai/{{openai_large}}
         api_key: os.environ/OPENAI_API_KEY
   router_settings:
     redis_host: "<redis-endpoint>"
@@ -175,7 +175,10 @@ redis:
 # one host fronting gateway, backend, and ui
 ingress:
   enabled: true
-  className: "<alb | gce | azure-application-gateway>"
+  className: "<alb | gce | azure-application-gateway | nginx>"
+  # alb (default) or nginx. ingress-nginx's admission webhook rejects the chart's
+  # dotted paths (/favicon.ico, /eu.assemblyai) unless this is nginx
+  controller: alb
   host: llm.example.com
   # optional: routes the chart does not ship a rule for, e.g. a passthrough
   # prefix added after this chart version or a custom
@@ -245,9 +248,9 @@ metadata:
 data:
   config.yaml: |
       model_list:
-        - model_name: gpt-4o
+        - model_name: {{openai_large}}
           litellm_params:
-            model: openai/gpt-4o
+            model: openai/{{openai_large}}
             api_key: os.environ/OPENAI_API_KEY
 ---
 apiVersion: v1
@@ -352,9 +355,9 @@ module "litellm" {
 
   proxy_config = {
     model_list = [{
-      model_name = "gpt-4o"
+      model_name = "{{openai_large}}"
       litellm_params = {
-        model   = "openai/gpt-4o"
+        model   = "openai/{{openai_large}}"
         api_key = "os.environ/OPENAI_API_KEY"
       }
     }]
@@ -432,8 +435,8 @@ module "litellm" {
 
   proxy_config = {
     model_list = [{
-      model_name = "gemini-2.5-pro"
-      litellm_params = { model = "vertex_ai/gemini-2.5-pro" }
+      model_name = "{{gemini_pro}}"
+      litellm_params = { model = "vertex_ai/{{gemini_pro}}" }
     }]
   }
 }
